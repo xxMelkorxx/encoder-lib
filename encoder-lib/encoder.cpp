@@ -1,228 +1,133 @@
 #include <string>
 #include <vector>
-#include <map>
-#include <queue>
-#include <iostream>
-#include <fstream>
+#include <bitset>
 #include "encoder.h"
 using namespace std;
 
-class huffman_tree_node {
-private:
-	char data;										// Символ
-	unsigned freq;									// Частота
-	huffman_tree_node* left, * right;				// Левый и правый потомок
-	friend class huffman_coding;
-public:
-	huffman_tree_node(char _data, unsigned _freq) {
-		this->left = this->right = NULL;
-		this->data = _data;
-		this->freq = _freq;
-	}
-	~huffman_tree_node() {
-		delete left;
-		delete right;
-	}
-};
+CODE_RESULT Encode(const string input, vector<bool>& output) {
+    vector<bool> bits;
+    // Преобразуем строку в последовательность битов в виде вектора.
+    for (const auto& c : input) {
+        bitset<8> binary_ascii(c);
+        for (int i = 7; i >= 0; --i)
+            bits.push_back(binary_ascii[i]);
+    }
 
-typedef huffman_tree_node* pointer_huffman;
+    // Закодированные данные имеют двойной размер.
+    bits.push_back(false);
+    vector<bool> encoded(bits.size() * 2);
 
-class huffman_coding {
-private:
-	pointer_huffman root_main;
-	map<char, string> replace_abc;
-	string encode;
-	string decode;
-public:
-	struct compare {
-		bool operator()(huffman_tree_node* left, huffman_tree_node* right) {
-			return (left->freq > right->freq);
-		}
-	};
-	void HuffmanCodes(string data, int freq[]);									// Кодирование.
-	void encode_text(string text);												// Кодирование-замена в самой стринге.
-	string get_encode();														// Возврат encode строки.
-	void output_file(string filename, bool flag);								// Вывод в файл
-	string decode_text(string str, bool flag_ex);								// Раскодирование через дерево
-};
+    // Начальное состояние регистра сдвига.
+    int state = 0;
+    for (int i = 0; i < bits.size(); ++i) {
+        encoded[i * 2] = bits[i];
+        encoded[i * 2 + 1] = state ^ bits[i];
+        state = bits[i];
+    }
 
-/* Функция, которая строит дерево Хаффмана и печатает коды обходя это построенное Дерево Хаффмана */
-void huffman_coding::HuffmanCodes(string data, int freq[])
-{
-	pointer_huffman left, right, top;
-
-	// Создаем узлы с данными и частотой (учитывая compare функцию сравнения)
-	priority_queue<pointer_huffman, vector<huffman_tree_node*>, compare> min_heap;
-	for (int i = 0; i < data.size(); ++i) {
-		pointer_huffman temp = new huffman_tree_node(data[i], freq[i]);
-		min_heap.push(temp);
-	}
-
-	// Пока размер очереди не дойдёт до единицы.
-	while (min_heap.size() != 1) {
-		// Достаем два минимальных по частоте элемента из дерева.
-		left = min_heap.top();
-		min_heap.pop();
-
-		right = min_heap.top();
-		min_heap.pop();
-
-		// Создаем новый узел с частотой, равной сумме двух частот узлов c наименьшей частотой.
-		top = new huffman_tree_node('$', left->freq + right->freq);
-		top->left = left;
-		top->right = right;
-		min_heap.push(top);
-	}
-}
-
-/* Кодирование текста */
-void huffman_coding::encode_text(string text) {
-	for (int i = 0; i < text.size(); i++) {
-		for (auto it = replace_abc.begin(); it != replace_abc.end(); ++it) {
-			if (text[i] == it->first) {
-				encode += it->second;
-			}
-		}
-	}
-}
-
-/* Получение кодовой строки */
-string huffman_coding::get_encode() {
-	return encode;
-}
-
-/* Вывод текста в файл*/
-void huffman_coding::output_file(string filename, bool flag) {
-	fstream file;
-	file.open(filename, ios::out);
-	if (flag) {
-		for (int i = 0; i < encode.size(); i++) {
-			file << encode[i];
-		}
-	}
-	else {
-		for (int i = 0; i < decode.size(); i++) {
-			file << decode[i];
-		}
-	}
-	file.close();
-}
-
-/* Раскодирование текста */
-string huffman_coding::decode_text(string str, bool flag_ex)
-{
-	int main_counter = 0;
-	decode = "";
-	for (int i = main_counter; i < str.size();) {
-		pointer_huffman temp = root_main;
-		while (true) {
-			if (str[i] == '0') {
-				if (temp->left != NULL) {
-					temp = temp->left;
-				}
-				else {
-					decode += temp->data;
-					break;
-				}
-			}
-			else {
-				if (temp->right != NULL) {
-					temp = temp->right;
-				}
-				else {
-					decode += temp->data;
-					break;
-				}
-			}
-			i++;
-			main_counter = i;
-		}
-
-		if (flag_ex) {
-			i++;
-		}
-		else {
-			i = main_counter;
-		}
-	}
-	return decode;
-}
-
-/* Создание алфавита */
-string get_repeat(string text) {
-	string abc;
-	bool exit_flag = 0;
-	abc.push_back(text[0]);
-	for (int i = 1; i < text.size(); i++) {
-		exit_flag = 0;
-		for (int j = 0; j < abc.size(); j++) {
-			// Если в нашем алфавите уже есть такая буква, то выходим из цикла.
-			if (abc[j] == text[i]) {
-				exit_flag = 1;
-				break;
-			}
-		}
-		// Если мы находили букву ранее, то переходим на следующую итерацию для следующей буквы.
-		if (exit_flag == 1)	continue;
-		// Если буква найдена не была, то добавляем в алфавит. 
-		else {
-			abc.push_back(text[i]);
-			continue;
-		}
-	}
-	return abc;
-}
-
-/* Получение массива частоты использования символов */
-void get_frequency(string text, int* frequencies, string abc) {
-	for (int i = 0; i < abc.size(); i++) {
-		frequencies[i] = 0;
-	}
-	for (int j = 0; j < abc.size(); j++) {
-		for (int i = 0; i < text.size(); i++) {
-			if (abc[j] == text[i]) {
-				frequencies[j]++;
-			}
-		}
-	}
-}
-
-CODE_RESULT Encode(string input, vector<bool>& output) {
-	// Получаем массив частот.
-	string abc = get_repeat(input);
-	int* frequencies = new int[abc.size()];
-	get_frequency(input, frequencies, abc);
-
-	/* Кодирование */
-	huffman_coding encoding;
-	encoding.HuffmanCodes(abc, frequencies);
-	string temp = encoding.get_encode();
-	for (char& c : temp) {
-		output.push_back(c != '0');
-	}
-	encoding.output_file(encode_output, true);
+    output.assign(encoded.begin(), encoded.end());
 
 	return OK;
 }
 
-CODE_RESULT Decode(vector<bool> input, string& output) {
-	/* Обработка исключения: один символ */
+CODE_RESULT Encode(const vector<bool>input, vector<bool>& output) {
+    vector<bool> bits;
+    bits.assign(input.begin(), input.end());
+    bits.push_back(false);
 
-	bool flag_ex = 0;
-	string abc = "fdfdfdsfsd";
-	if (abc.size() < 2)
-	{
-		flag_ex = !flag_ex;
+    vector<bool> encoded(bits.size() * 2);
+
+    // Начальное состояние регистра сдвига.
+    int state = 0;
+    for (int i = 0; i < bits.size(); ++i) {
+        encoded[i * 2] = bits[i];
+        encoded[i * 2 + 1] = state ^ bits[i];
+        state = bits[i];
+    }
+
+    output.assign(encoded.begin(), encoded.end());
+
+    return OK;
+}
+
+CODE_RESULT Decode(const vector<bool> input, string& output) {
+    vector<bool> bits(input.size() / 2);
+
+    // ДЕКОДИРОВАНИЕ.
+
+    // Преобразуем набор битов в ASCII-код символов
+    for (int i = 0; i < bits.size(); i += 8) {
+        bitset<8> byte;
+        for (int j = 0; j < 8; ++j) {
+            if (bits[i + j])
+                byte.set(7 - j);
+        }
+        output += static_cast<char>(byte.to_ulong());
+    }
+
+	return OK;
+}
+
+// Полином f1 = (1, 1)
+const vector<int> f1 = { 1, 1 };
+// Полином f2 = (1, 0, 1)
+const vector<int> f2 = { 1, 0, 1 };
+
+CODE_RESULT Decode(std::vector<bool> input, std::vector<bool>& output) {
+	const int num_states = 4;  // Количество состояний регистра сдвига (2 бита)
+
+	// Инициализация таблицы метрик исходными значениями
+	vector<vector<int>> metrics(num_states, vector<int>(2, 0));
+
+	// Переменная для сохранения пути до каждой вершины
+	vector<vector<int>> trellis(num_states, vector<int>(2, 0));
+
+	// Проходим по всем битам входной последовательности
+	for (int i = 0; i < input.size() / 2; ++i) {
+		// Проходим по всем возможным состояниям
+		for (int j = 0; j < num_states; ++j) {
+			// Проходим по всем возможным входным символам
+			for (int k = 0; k <= 1; ++k) {
+				// Рассчитываем метрику для следующего состояния
+				int next_state = (j & 1) << 1 | k;
+				int expected_output1 = (f1[0] & next_state) ^ (f1[1] & next_state >> 1) ^ k;
+				int expected_output2 = (f2[0] & next_state) ^ (f2[1] & next_state >> 1) ^ (f2[2] & j >> 1) ^ k;
+
+				int metric = metrics[j][k] + (expected_output1 != input[i * 2]) + (expected_output2 != input[i * 2 + 1]);
+
+				if (i == 0 || metric < metrics[next_state][k]) {
+					// Сохраняем лучшую метрику и путь до состояния
+					metrics[next_state][k] = metric;
+					trellis[next_state][k] = j;
+				}
+			}
+		}
 	}
 
-	string str;
-	for (int i = 0; i < input.size(); i++) {
-		str.push_back(input[i] ? '1' : '0');
+	// Находим путь с лучшей метрикой
+	int best_state = -1;
+	int best_metric = -1;
+
+	for (int j = 0; j < num_states; ++j) {
+		if (best_state == -1 || metrics[j][0] + metrics[j][1] < best_metric) {
+			best_state = j;
+			best_metric = metrics[j][0] + metrics[j][1];
+		}
 	}
 
-	huffman_coding encoding;
-	encoding.decode_text(str, flag_ex);
-	encoding.output_file(decode_output, false);
+	// Восстанавливаем путь декодирования
+	vector<int> decoded_indexes(input.size() / 2);
+	for (int i = input.size() / 2 - 1; i >= 0; --i) {
+		decoded_indexes[i] = trellis[best_state][input[i * 2 + 1]];
+		best_state = decoded_indexes[i];
+	}
+
+	// Возвращаем декодированные данные в обратном порядке
+	vector<bool> decoded(input.size() / 2);
+	for (int i = 0; i < input.size() / 2; ++i)
+		decoded[i] = decoded_indexes[decoded_indexes.size() - i - 1] & 1;
+
+	output.assign(decoded.begin(), decoded.end());
 
 	return OK;
 }
