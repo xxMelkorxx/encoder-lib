@@ -1,13 +1,11 @@
 #pragma once
-#define encode_output "output_encode.txt"
-#define decode_output "output_decode.txt"
 
 /*Код ошибки
 * INVALID_FORMAT - неверный формат
 */
 enum CODE_RESULT
 {
-	INVALID,
+	INVALID_INPUT,
 	OK
 };
 
@@ -15,9 +13,10 @@ enum CODE_RESULT
 Функция, реализующая кодирование строки в двоичный код.
 * input - входная строка, которую необходимо закодировать.
 * output - выходной вектор закодированной битовой последовательности.
+* bits - битовое представление входной строки.
 Функция возвращает код ошибки - OK или INVALID.
 */
-CODE_RESULT Encode(std::string input, std::vector<bool>& output);
+CODE_RESULT Encode(std::string input, std::vector<bool>& output, std::vector<bool>& bits);
 
 /*
 Функция, реализующая кодирование строки в двоичный код.
