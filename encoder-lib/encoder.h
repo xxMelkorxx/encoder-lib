@@ -1,7 +1,8 @@
 #pragma once
 
 /*Код ошибки
-* INVALID_FORMAT - неверный формат
+* INVALID_INPUT - неверный входной параметр (пустой вектор).
+* OK - результат выполнения без ошибок.
 */
 enum CODE_RESULT
 {
@@ -10,13 +11,18 @@ enum CODE_RESULT
 };
 
 /*
-Функция, реализующая кодирование строки в двоичный код.
-* input - входная строка, которую необходимо закодировать.
-* output - выходной вектор закодированной битовой последовательности.
-* bits - битовое представление входной строки.
-Функция возвращает код ошибки - OK или INVALID.
+Функция, конвертирующая строку в вектор битов.
+* input - входная строка.
+* output - выходной вектор битового представления строки.
 */
-CODE_RESULT Encode(std::string input, std::vector<bool>& output, std::vector<bool>& bits);
+CODE_RESULT ConvertToVectorBits(std::string input, std::vector<bool>& output);
+
+/*
+Функция, конвертирующая последовательность битов в строку.
+* input - входная строка.
+* output - выходной вектор битового представления строки.
+*/
+CODE_RESULT ConvertToString(std::vector<bool> input, std::string& output);
 
 /*
 Функция, реализующая кодирование строки в двоичный код.
@@ -25,14 +31,6 @@ CODE_RESULT Encode(std::string input, std::vector<bool>& output, std::vector<boo
 Функция возвращает код ошибки - OK или INVALID.
 */
 CODE_RESULT Encode(std::vector<bool>input, std::vector<bool>& output);
-
-/*
-Функция, реализующая кодирование строки в двоичный код.
-* input - входной вектор кодированных битовой последовательности.
-* output - выходная строка.
-Функция возвращает код ошибки - OK или INVALID.
-*/
-CODE_RESULT Decode(std::vector<bool> input, std::string& output);
 
 /*
 Функция, реализующая кодирование строки в двоичный код.

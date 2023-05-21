@@ -7,35 +7,44 @@ int main() {
 	setlocale(LC_ALL, "ru");
 	vector<bool> encoded, decoded, bits;
 
-	//// Входные данные.
-	//string str = "Hello";
+	cout << "Декодирование пороговым методом" << endl;
 
-	//// Кодирование данных.
-	//CODE_RESULT result = Encode(str, encoded, bits);
-	//if (result == OK) {
-
-	//	// Вывод результатов
-	//	cout << "Input: ";
-	//	for (const auto& bit : bits)
-	//		cout << bit;
-	//	cout << " - это битовое представление: \"" << str << "\"" << endl;
-	//	cout << "Encoded: ";
-	//	for (const auto& bit : encoded)
-	//		cout << bit;
-	//	cout << " - полученный код" << endl;
-
-	//	// Декодированние данных.
-	//	CODE_RESULT result = Decode(encoded, decoded);
-	//	if (result == OK) {
-	//		cout << "Decoded: ";
-	//		for (const auto& bit : decoded)
-	//			cout << bit;
-	//		cout << endl << endl;
-	//	}
-	//}
-	//else if (result == INVALID_INPUT) {
-	//	cout << "Ошибка: Неверный входной параметр!" << endl;
-	//}
+	// Входные данные.
+	string input = "Hello, World!";
+	cout << "Message: " << input << endl;
+	ConvertToVectorBits(input, bits);
+	// Кодирование данных.
+	Encode(bits, encoded);
+	// Вывод результатов
+	cout << "Input: ";
+	for (const auto& bit : bits)
+		cout << bit;
+	cout << endl;
+	cout << "Encoded: ";
+	for (const auto& bit : encoded)
+		cout << bit;
+	cout << endl;
+	// Добавление ошибки в последовательность.
+	encoded[3] = !encoded[3];
+	encoded[5] = !encoded[5];
+	encoded[25] = !encoded[25];
+	encoded[31] = !encoded[31];
+	encoded[50] = !encoded[50];
+	encoded[62] = !encoded[62];
+	cout << "Encoded: ";
+	for (const auto& bit : encoded)
+		cout << bit;
+	cout << " - код с ошибкой" << endl;
+	// Декодированние данных.
+	Decode(encoded, decoded);
+	cout << "Decoded: ";
+	for (const auto& bit : decoded)
+		cout << bit;
+	cout << endl;
+	// Конвертация битовой последовательности в строку.
+	string output;
+	ConvertToString(decoded, output);
+	cout << "Decode message: " << output << endl;
 
 	//##########################################################################################
 	bits.clear();
@@ -43,42 +52,32 @@ int main() {
 	decoded.clear();
 
 	// Входные данные.
-	bits = { 0, 1, 1, 0, 0, 1 };
-
+	bits = { 1, 0, 0, 0, 0, 0 };
 	// Кодирование данных.
-	CODE_RESULT result = Encode(bits, encoded);
-	if (result == OK) {
-		cout << "Input: ";
-		for (const auto& bit : bits)
-			cout << bit;
-		cout << " - входная последовательность код" << endl;
-
-		cout << "Encoded: ";
-		for (const auto& bit : encoded)
-			cout << bit;
-		cout << " - полученный код" << endl;
-		cout << "Encoded: 0011101011110111 - ожидаемый код" << endl;
-
-		// Добавляем ошибку в последовательность.
-		encoded[10] = !encoded[10];
-		cout << "Encoded: ";
-		for (const auto& bit : encoded)
-			cout << bit;
-		cout << " - код с ошибкой" << endl;
-
-		// Декодированние данных.
-		result = Decode(encoded, decoded);
-		if (result == OK) {
-			cout << "Decoded: ";
-			for (const auto& bit : decoded)
-				cout << bit;
-		}
-		cout << " - декодированный код" << endl;
-	}
-	else if (result == INVALID_INPUT) {
-		cout << "Ошибка: Неверный входной параметр!" << endl;
-	}
-
+	Encode(bits, encoded);
+	cout << "\nInput: ";
+	for (const auto& bit : bits)
+		cout << bit;
+	cout << " - входная последовательность код" << endl;
+	cout << "Encoded: ";
+	for (const auto& bit : encoded)
+		cout << bit;
+	cout << " - полученный код" << endl;
+	cout << "Encoded: 1101110000000000 - ожидаемый код" << endl;
+	// Добавление ошибки в последовательность.
+	encoded[3] = !encoded[3];
+	encoded[5] = !encoded[5];
+	cout << "Encoded: ";
+	for (const auto& bit : encoded)
+		cout << bit;
+	cout << " - код с ошибкой" << endl;
+	// Декодированние данных.
+	Decode(encoded, decoded);
+	cout << "Decoded: ";
+	for (const auto& bit : decoded)
+		cout << bit;
+	cout << endl;
+	
 	int exit;
 	cin >> exit;
 }
